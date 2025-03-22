@@ -421,7 +421,11 @@ end
 ------------------------------------------------------------------------------
 -- Utility Functions
 ------------------------------------------------------------------------------
-
+function awake.mapper.activate()
+  awake.matrix.container:hide()
+  geyserMapper:show()
+  geyserMapper:raiseAll()
+end
 
 function awake.mapper.log(text)
   cecho("[<cyan>awake Mapper<reset>] "..text.."\n")

@@ -1,6 +1,11 @@
 awake = awake or {}
 awake.matrix = awake.matrix or {
-  data = {
+  debug = false,
+  hostTable = {
+    
+  },
+  temp = {
+    lastConnectAddress = ""
   }
 }
 
@@ -12,7 +17,7 @@ function awake.matrix.setup()
     width = "100%",
     height = "100%",
   }, awake.layout.upperContainer)
-  awake.matrix.container:setBackgroundImage(getMudletHomeDir().."/@PKGNAME@/matrix.jpg")
+  awake.matrix.container:setBackgroundImage(getMudletHomeDir().."/awake-ui/matrix.jpg")
   -- This seems necessary when recreating the UI after upgrading the package.
   awake.matrix.container:raiseAll()
   
@@ -71,6 +76,59 @@ function awake.matrix.setup()
   end
   
   awake.matrix.container:hide()
+  
+  local function doUpdate()
+    if not gmcp or not gmcp.Matrix or tostring(gmcp.Matrix.Info) == "null" then
+      -- gmcp.Matrix.Info is equal to {} when we're not in the matrix
+      -- the mud will send that on logoff or dumpshock
+      awake.mapper.activate()
+      return
+    end
+    
+    -- Safe to call this multiple times
+    awake.matrix.activate()
+    awake.matrix.nodeLabel:echo("<center>" .. gmcpVarByPath("Matrix.Info.name") .. "</center>")
+    awake.matrix.temp.lastHost = awake.matrix.temp.currentHost
+    awake.matrix.temp.currentHost = {
+      ["vnum"] = gmcpVarByPath("Matrix.Info.vnum"), 
+      ["name"] = gmcpVarByPath("Matrix.Info.name")
+    }
+    
+    if not awake.matrix.hostTable[gmcpVarByPath("Matrix.Info.vnum")] then
+      awake.matrix.logDebug("Adding new host <yellow>"..gmcpVarByPath("Matrix.Info.name").."</yellow>")
+      awake.matrix.hostTable[gmcpVarByPath("Matrix.Info.vnum")] = {
+        ["vnum"] = gmcpVarByPath("Matrix.Info.vnum"), 
+        ["name"] = gmcpVarByPath("Matrix.Info.name"),
+        ["addresses"] = {}
+      }
+    end
+    
+    if awake.matrix.lastConnectAddress ~= "" then
+      if awake.matrix.temp.lastHost ~= nil then
+        -- Add this as an address connection to our host
+        awake.matrix.hostTable[awake.matrix.temp.lastHost.vnum][awake.matrix.lastConnectAddress] = awake.matrix.temp.currentHost.vnum
+      end
+      awake.matrix.lastConnectAddress = ""
+      disableTrigger("connect-host")
+    end
+  end
+  awake.setup.registerEventHandler("gmcp.Matrix.Info", doUpdate)
+  awake.setup.registerEventHandler("sysDataSendRequest", awake.matrix.handleSentCommand)
+end
+
+-- Track the most recent connect command so we know which direction we moved when automapping
+function awake.matrix.handleSentCommand(event, cmd)
+  -- If we're not connected to the matrix, don't bother
+  if not gmcp or not gmcp.Matrix or tostring(gmcp.Matrix.Info) == "null" then
+    return
+  end
+
+  local host = cmd:match("^co(n(n(e(c(t)?)?)?)?)? (.+)$")
+  if host then
+    awake.matrix.logDebug("User is trying to connect to a host named <yellow>"..host.."</yellow>")
+    awake.matrix.temp.lastConnectAddress = host
+    enableTrigger("connect-host")
+  end
 end
 
 function awake.matrix.activate()

@@ -1,5 +1,6 @@
 awake = awake or {}
 awake.infoPanel = awake.infoPanel or {}
+awake.infoPanel.conditionStyles = awake.infoPanel.conditionStyles or {}
 
 
 function awake.infoPanel.setup()
@@ -18,12 +19,14 @@ function awake.infoPanel.createConditionMonitor(container, x, y, label, varName)
     name = varName .. "Container",
     x = x, y = y, width = "90%", height = 20
   }, container)
+  healthContainer:raiseAll()
   
   -- Add the label
   conditionLabel = Geyser.Label:new({
     name = varName .. "Label",
     x = 0, y = 0, width = "60", height = "100%",
   }, healthContainer)
+  conditionLabel:raiseAll()
 
   conditionLabel:echo(label)
   conditionLabel:setStyleSheet([[
@@ -45,11 +48,15 @@ function awake.infoPanel.createConditionMonitor(container, x, y, label, varName)
       name = varName .. "Box" .. i,
       x = xOffset, y = 0, width = boxWidth, height = boxWidth,
     }, healthContainer)
-
+    
+    healthBoxes[i]:raiseAll()
     healthBoxes[i]:setStyleSheet(awake.infoPanel.conditionStyles.empty)
   end
   
   local function doUpdate()
+    if not gmcp or not gmcp.Char or not gmcp.Char.Vitals then
+      return  
+    end
     local current = (gmcpVarByPath("Char.Vitals." .. varName) or 0) / 100
     local max = (gmcpVarByPath("Char.Vitals." .. varName .. "_max") or 0) / 100
     local filled = math.floor((current / max) * 10 + 0.5)

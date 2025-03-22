@@ -1,3 +1,40 @@
 [
-    
+  {
+    "name": "radio",
+    "patterns": [
+      {
+        "pattern": "^\\(.+)\/\\[(\\d+) MHz, (.+)\\]: (.+)$",
+        "type": "regex"
+      }
+    ],
+    "script": "awake.chat.routeMessage(\"radio\")"      
+  },
+  {
+    "name": "local",
+    "patterns": [
+      {
+        "pattern": "^(.+) (say|says|shout|shouts) in (\\w)+, \"(.+)\"$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^(.+) whisper(s)? to (.+) in (.+), \"(.+)\"$",
+        "type": "regex"
+      }
+    ],
+    "script": "awake.chat.routeMessage(\"local\")"      
+  },
+  {
+    "name": "ooc",
+    "patterns": [
+      {
+        "pattern": "^(.+) (say|says) OOCly, \"(.+)\"$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^\\[(.+)\\] \\(OOC\\), \"(.+)\"$",
+        "type": "regex"
+      }
+    ],
+    "script": "awake.chat.routeMessage(\"ooc\")"   
+  }
 ]

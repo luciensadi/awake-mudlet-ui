@@ -137,3 +137,7 @@ function splitargs(args)
     end
     echo("\n\n")
   end
+
+function trim(s)
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end

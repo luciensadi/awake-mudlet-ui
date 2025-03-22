@@ -40,10 +40,6 @@ local function revDirObj(arg)
   return nil
 end
 
-local function trim(s)
-  return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
-
 
 ------------------------------------------------------------------------------
 -- Command Handlers

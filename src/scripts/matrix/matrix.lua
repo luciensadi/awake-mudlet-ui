@@ -1,17 +1,14 @@
 awake = awake or {}
 awake.matrix = awake.matrix or {
-  debug = false,
-  hostTable = {
-    
-  },
-  temp = {
-    lastConnectAddress = ""
-  }
+  debug = true,
+  hostTable = {},
+  lastConnectAddress = ""
 }
 
-local dataFileName = getMudletHomeDir().."/matrix"
+local MAX_BUTTONS = 32
+
+local dataFileName = getMudletHomeDir().."/matrix.db"
 function awake.matrix.setup()
-  awake.matrix.log(dataFileName)
   awake.matrix.container = Geyser.Label:new({
     name = "matrix",
     x = 0, y = 0,
@@ -45,7 +42,6 @@ function awake.matrix.setup()
   
   -- You can't delete GUI elements once they're created AFAIK
   -- So we'll create all our buttons now.
-  local maxButtons = 32
   local columns = 5               -- number of columns in the grid
   local buttonWidth = 100         -- width in pixels (adjust as needed)
   local buttonHeight = 32         -- height in pixels (adjust as needed)
@@ -53,10 +49,11 @@ function awake.matrix.setup()
   local spacingY = 10             -- vertical spacing between buttons
 
   -- Calculate number of rows and container dimensions
-  local rows = math.ceil(maxButtons / columns)
+  local rows = math.ceil(MAX_BUTTONS / columns)
   
   -- Loop through the objects and create a button for each
-  for i = 1, maxButtons do
+  awake.matrix.buttons = {}
+  for i = 1, MAX_BUTTONS do
     local row = math.floor((i - 1) / columns)
     local col = (i - 1) % columns
     local xPos = (spacingX * 3) + col * (buttonWidth + spacingX)
@@ -78,6 +75,9 @@ function awake.matrix.setup()
       border: 1px solid #00aaaa;
       font-family: "Bitstream Vera Sans Mono";
     ]])
+    
+    btn:hide()    
+    awake.matrix.buttons[btnName] = btn
   end
   
   if io.exists(dataFileName) then
@@ -94,37 +94,80 @@ function awake.matrix.setup()
       -- the mud will send that on logoff or dumpshock
       awake.mapper.activate()
       return
+    elseif awake.matrix.currentHost ~= nil and awake.matrix.currentHost.vnum == gmcpVarByPath("Matrix.Info.vnum") then
+      -- Sometimes we get double messages; just discard
+      return
+    end
+    -- Set up some variables we'll need later
+    local hostName = gmcpVarByPath("Matrix.Info.name")
+    local hostVnum = gmcpVarByPath("Matrix.Info.vnum")
+    local lastVnum = nil
+    local lastName = nil
+    if awake.matrix.currentHost ~= nil then
+      lastVnum = awake.matrix.currentHost.vnum
+      lastName = awake.matrix.currentHost.name
     end
     
     -- Safe to call this multiple times
     awake.matrix.activate()
-    awake.matrix.nodeLabel:echo("<center>" .. gmcpVarByPath("Matrix.Info.name") .. "</center>")
-    awake.matrix.temp.lastHost = awake.matrix.temp.currentHost
-    awake.matrix.temp.currentHost = {
-      ["vnum"] = gmcpVarByPath("Matrix.Info.vnum"), 
-      ["name"] = gmcpVarByPath("Matrix.Info.name")
+    awake.matrix.nodeLabel:echo("<center>"..hostName.."</center>")
+    awake.matrix.lastHost = awake.matrix.currentHost
+    awake.matrix.currentHost = {
+      ["vnum"] = hostVnum, 
+      ["name"] = hostName
     }
+    awake.matrix.logDebug("Entered new host <yellow>"..hostName.."<reset>.")
     
-    if not awake.matrix.hostTable[gmcpVarByPath("Matrix.Info.vnum")] then
-      awake.matrix.logDebug("Adding new host <yellow>"..gmcpVarByPath("Matrix.Info.name").."</yellow>")
-      awake.matrix.hostTable[gmcpVarByPath("Matrix.Info.vnum")] = {
-        ["vnum"] = gmcpVarByPath("Matrix.Info.vnum"), 
-        ["name"] = gmcpVarByPath("Matrix.Info.name"),
+    -- When we encounter a host for the first time we add it to the hostTable
+    -- This is our local 'address book'
+    if not awake.matrix.hostTable[hostVnum] then
+      awake.matrix.logDebug("Adding new host <yellow>"..hostName.."<reset>")
+      awake.matrix.hostTable[hostVnum] = {
+        ["vnum"] = hostVnum, 
+        ["name"] = hostName,
         ["addresses"] = {}
       }
     end
     
+    -- The code that handles discovering addresses
     if awake.matrix.lastConnectAddress ~= "" then
-      if awake.matrix.temp.lastHost ~= nil then
+      if lastVnum ~= nil and not awake.matrix.hostTable[lastVnum].addresses[awake.matrix.lastConnectAddress] then
         -- Add this as an address connection to our host
-        awake.matrix.hostTable[awake.matrix.temp.lastHost.vnum][awake.matrix.lastConnectAddress] = awake.matrix.temp.currentHost.vnum
+        awake.matrix.logDebug("Registering address <yellow>"..awake.matrix.lastConnectAddress.."<reset> to host <yellow>"..hostName.."<reset>.")
+        awake.matrix.hostTable[lastVnum].addresses[awake.matrix.lastConnectAddress] = hostVnum
       end
       awake.matrix.lastConnectAddress = ""
       disableTrigger("connect-host")
     end
+    
+    -- Hide all the buttons
+    for i = 1, MAX_BUTTONS do
+      local btnName = "gridButton" .. i
+      local btn = awake.matrix.buttons[btnName]
+      btn:hide()
+    end
+    
+    -- The code that renders our current addresses
+    local curHost = awake.matrix.hostTable[hostVnum]
+    local count = 0
+    for key, value in pairs(curHost.addresses) do
+      count = count + 1
+      local btnName = "gridButton" .. count
+      local btn = awake.matrix.buttons[btnName]
+      
+      btn:show()
+      btn:raiseAll()
+      btn:echo("<center>"..key.."</center>")
+      btn:setToolTip("Connect to "..awake.matrix.hostTable[value].name, "10")
+      btn:setClickCallback("awake.matrix.handleDoConnect", key)
+    end
   end
   awake.setup.registerEventHandler("gmcp.Matrix.Info", doUpdate)
   awake.setup.registerEventHandler("sysDataSendRequest", awake.matrix.handleSentCommand)
+end
+
+function awake.matrix.handleDoConnect(address)
+   send("connect "..address, false)
 end
 
 -- Track the most recent connect command so we know which direction we moved when automapping
@@ -133,11 +176,11 @@ function awake.matrix.handleSentCommand(event, cmd)
   if not gmcp or not gmcp.Matrix or tostring(gmcp.Matrix.Info) == "null" then
     return
   end
-
-  local host = cmd:match("^co(n(n(e(c(t)?)?)?)?)? (.+)$")
-  if host then
-    awake.matrix.logDebug("User is trying to connect to a host named <yellow>"..host.."</yellow>")
-    awake.matrix.temp.lastConnectAddress = host
+  
+  local host = rex.match(cmd, [[co(?:n(?:n(?:e(?:c(?:t)?)?)?)?)? (.+)]])
+  if host ~= nil then
+    awake.matrix.logDebug("User is trying to connect to a host named <yellow>"..host.."<reset>")
+    awake.matrix.lastConnectAddress = trim(host)
     enableTrigger("connect-host")
   end
 end
@@ -150,6 +193,16 @@ end
 
 function awake.matrix.log(text)
   cecho("[<cyan>Awake Matrix Map<reset>] "..text.."\n")
+end
+
+function awake.matrix.logDebug(text)
+  -- if awake.matrix.debug then
+    awake.matrix.log("<green>Debug:<reset> "..text)
+  -- end
+end
+
+function awake.matrix.logError(text)
+  awake.matrix.log("<red>Error:<reset> "..text)
 end
 
 function awake.matrix.resetData()

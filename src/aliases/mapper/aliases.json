@@ -1,0 +1,7 @@
+[
+    {
+      "name": "map",
+      "regex": "^map( ?.*)$",
+      "script": "awake.mapper.mapCommand(matches[2])"
+    }
+  ]

@@ -1,0 +1,76 @@
+[
+  {
+    "name": "invalid-dir",
+    "patterns": [
+      {
+        "pattern": "^You cannot go that way...$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^Something seems to be in the way...$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^As you approach, the cobalt flash of an astral barrier warns you back.$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^The (.+) seem(s)? to be closed.$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^It seems to be closed.$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^Sorry, that area is for game administration only.$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^Sorry, you need to be a level-(.+) staff member to go there.$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^All you can do is cling to the shaft and hope for the best!$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^Are you crazy? There's a moving elevator car there!$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^You'll have to drop any vehicles before going there. \\(If you can't drop them and are completely stuck, use the STUCK command.\\)$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^You're wearing too much armor to move!$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^(.+) would plunge to its destruction!$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^(.+) would sink$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^You can't go there without having the right key or pass in your inventory.$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^PANIC! You couldn't escape!$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^Maybe you should get on your feet first?$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^It will be difficult to do that while tethered to the matrix.$",
+        "type": "regex"
+      }
+    ],
+    "script": "awake.mapper.logDebug(\"Popping movement dir because movement blocked...\")\nawake.mapper.popMoveDir()"
+  }
+]

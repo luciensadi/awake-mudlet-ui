@@ -22,6 +22,7 @@ local function setup()
   awake.chat.setup()
   awake.infoPanel.setup()
   awake.mapper.setup()
+  awake.matrix.setup()
 
   -- Then set our UI default view
   awake.layout.selectTab(awake.layout.lowerRightTabData, "all")

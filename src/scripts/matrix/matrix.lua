@@ -17,7 +17,7 @@ function awake.matrix.setup()
     width = "100%",
     height = "100%",
   }, awake.layout.upperContainer)
-  awake.matrix.container:setBackgroundImage(getMudletHomeDir().."/awake-ui/matrix.jpg")
+  awake.matrix.container:setBackgroundImage(getMudletHomeDir().."/awake-ui/matrix.png")
   -- This seems necessary when recreating the UI after upgrading the package.
   awake.matrix.container:raiseAll()
   

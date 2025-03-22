@@ -11,30 +11,37 @@ awake.matrix = awake.matrix or {
 
 local dataFileName = getMudletHomeDir().."/matrix"
 function awake.matrix.setup()
+  awake.matrix.log(dataFileName)
   awake.matrix.container = Geyser.Label:new({
     name = "matrix",
     x = 0, y = 0,
     width = "100%",
     height = "100%",
   }, awake.layout.upperContainer)
-  awake.matrix.container:setBackgroundImage(getMudletHomeDir().."/awake-ui/matrix.png")
+  awake.matrix.container:setBackgroundImage(getMudletHomeDir() .. "/awake-ui/matrix.jpg")
   -- This seems necessary when recreating the UI after upgrading the package.
   awake.matrix.container:raiseAll()
   
   awake.matrix.nodeLabel = Geyser.Label:new({
     name = "nodeLabel",
     x = "0%", y = "0%",
-    width = "100%", height="20%"
+    width = "100%", height="10%"
   }, awake.matrix.container)
   awake.matrix.nodeLabel:echo("<center>Seattle LTG</center>")
+  awake.matrix.nodeLabel:setStyleSheet([[
+    background-color: rgba(0,0,0,60%);
+  ]])
   
   -- This grid container holds the addresses 
   awake.matrix.gridContainer = Geyser.Label:new({
     name = "matrixGrid",
-    x = "0%", y = "20%",
+    x = "0%", y = "15%",
     width = "100%",
-    height = "80%"
+    height = "85%"
   }, awake.matrix.container)
+  awake.matrix.gridContainer:setStyleSheet([[
+    background-color: rgba(0,0,0, 0%);
+  ]])
   
   -- You can't delete GUI elements once they're created AFAIK
   -- So we'll create all our buttons now.
@@ -52,7 +59,7 @@ function awake.matrix.setup()
   for i = 1, maxButtons do
     local row = math.floor((i - 1) / columns)
     local col = (i - 1) % columns
-    local xPos = spacingX + col * (buttonWidth + spacingX)
+    local xPos = (spacingX * 3) + col * (buttonWidth + spacingX)
     local yPos = row * (buttonHeight + spacingY)
 
     local btnName = "gridButton" .. i
@@ -66,7 +73,11 @@ function awake.matrix.setup()
     }, awake.matrix.gridContainer)
 
     -- Apply semi-transparent style (white with 50% opacity)
-    btn:setStyleSheet("background-color: rgba(255, 255, 255, 0.5);")
+    btn:setStyleSheet([[
+      background-color: rgba(0,0,0, 80%);
+      border: 1px solid #00aaaa;
+      font-family: "Bitstream Vera Sans Mono";
+    ]])
   end
   
   if io.exists(dataFileName) then

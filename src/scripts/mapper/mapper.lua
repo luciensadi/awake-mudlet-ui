@@ -397,23 +397,21 @@ function awake.mapper.processCurrentRoom()
 end
 
 function awake.mapper.onEnterRoom()
+  if not gmcp or not gmcp.Room or not gmcp.Room.Info then
+    return
+  end
+  
   awake.mapper.logDebug("Handling entered room, vnum "..gmcp.Room.Info.vnum)
   if awake.mapper.current ~= nil then
     awake.mapper.last = awake.mapper.current
   end
+  
   awake.mapper.current = {
     vnum = gmcp.Room.Info.vnum,
     name = gmcp.Room.Info.name,
     exits = gmcp.Room.Info.exits or {},
     zone = gmcp.Room.Info.zone
   }
-
-  -- This room has coordinates set in the game which we should use.
-  -- if gmcp.Room.Info.x ~= nil then
-    -- awake.mapper.current.x = gmcp.Room.Info.x
-    -- awake.mapper.current.y = gmcp.Room.Info.y
-    -- awake.mapper.current.z = gmcp.Room.Info.z
-  -- end
   
   awake.mapper.processCurrentZone()
   awake.mapper.processCurrentRoom()

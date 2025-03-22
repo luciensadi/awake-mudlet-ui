@@ -33,7 +33,7 @@ jobs:
       
       # This step uploads the artifact for you and others to download
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           # build/tmp/ is the directory muddler makes the mpackage out of
           # GitHub only allows you to upload zip files, so we let them

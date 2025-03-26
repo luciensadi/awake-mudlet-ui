@@ -3,7 +3,7 @@
     "name": "radio",
     "patterns": [
       {
-        "pattern": "^\\(.+)\/\\[(\\d+) MHz, (.+)\\]: (.+)$",
+        "pattern": "^\\\\(.+)\/\\[(\\d+) MHz, (.+)\\]: (.+)$",
         "type": "regex"
       }
     ],
@@ -36,5 +36,19 @@
       }
     ],
     "script": "awake.chat.routeMessage(\"ooc\")"   
+  },
+  {
+    "name": "tell",
+    "patterns": [
+      {
+        "pattern": "^(.+)(?: \\((.+)\\))? tells you OOCly, '(.+)'$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^You tell (.+)(?: \\((.+)\\))? OOCly, '(.+)'$",
+        "type": "regex"
+      }
+    ],
+    "script": "awake.chat.routeMessage(\"tell\")"   
   }
 ]

@@ -70,8 +70,6 @@ function awake.mapper.mapCommand(input)
     awake.mapper.shiftCurrentRoom(args)
   elseif cmd == "save" then
     awake.mapper.saveMap()
-  elseif cmd == "setroomcoords" then
-    awake.mapper.setRoomCoords(args)
   elseif cmd == "reset" then
     awake.mapper.resetMap()
   else
@@ -162,6 +160,10 @@ Save the map to the map.dat file in your Mudlet profile's directory.
 
 Deletes all data for an area. There's no confirmation and no undo!
 
+<yellow>map deleteroom<reset>
+
+Deletes the current room from the map. There's no confirmation and no undo!
+
 <yellow>map reset<reset>
 
 Deletes ALL map data!!!
@@ -242,28 +244,9 @@ end
 
 
 function awake.mapper.saveMap()
-  saveMap(getMudletHomeDir() .. "/map.dat")
+  saveJsonMap(getMudletHomeDir() .. "/map.json")
   awake.mapper.log("Map saved.")
 end
-
-
-function awake.mapper.setRoomCoords(areaName)
-  if not gmcp.Char.Info.immLevel or gmcp.Char.Info.immLevel < 102 then
-    awake.mapper.logError("This command only works for imm characters.")
-    return
-  end
-  
-  local areaId = getAreaTable()[areaName]
-  if not areaId then
-    awake.mapper.logError("Area not found by name "..areaName)
-    return
-  end
-  
-  for _, roomId in ipairs(getAreaRooms(areaId)) do
-    local x, y, z = getRoomCoordinates(roomId)
-    send("at "..roomId.." redit xyz "..x.." "..y.." "..z)
-  end
-end  
 
 
 ------------------------------------------------------------------------------
@@ -281,7 +264,6 @@ function awake.mapper.setup()
       height = "100%",
     }, awake.layout.upperContainer)
   else
-    -- awake.layout.upperRightTabData.contents["map"]:add(geyserMapper)
     geyserMapper:raiseAll()
   end
   setMapZoom(15)
@@ -293,7 +275,10 @@ function awake.mapper.setup()
     end
   end
   if not hasAnyAreas then
-    loadMap(getMudletHomeDir().."/awake-ui/starter-map.dat")
+    -- Reset the map just in case
+    awake.mapper.resetMap()
+    -- Load the JSON file
+    loadJsonMap(getMudletHomeDir().."/awake-ui/starter-map.json")
   end
 
   awake.setup.registerEventHandler("sysDataSendRequest", awake.mapper.handleSentCommand)

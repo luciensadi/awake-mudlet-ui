@@ -1,5 +1,11 @@
 [
     {
       "name": "info-panel"
+    },
+    {
+      "name": "credstik"
+    },
+    {
+      "name": "condition"
     }
   ]

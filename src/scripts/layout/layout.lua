@@ -134,11 +134,15 @@ function awake.layout.setup()
 
   -- Lower info panel, for prompt hp/move gauges and other basic status
   awake.layout.lowerInfoPanelHeight = getFontSize()*5
-  awake.layout.lowerInfoPanel = Geyser.HBox:new({
+  -- Have to use a label as the master container as HBOX cannot be styled
+  awake.layout.lowerInfoPanel = Geyser.Label:new({
     x = 0, y = -awake.layout.lowerInfoPanelHeight,
     width = (100-rightPanelWidthPct).."%",
     height = awake.layout.lowerInfoPanelHeight,
   })
+  awake.layout.lowerInfoPanel:setStyleSheet([[
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0.681, y2:0.778, stop:0.29902 rgba(99, 114, 137, 255), stop:1 rgba(71, 79, 98, 255));
+  ]])
   setBorderBottom(awake.layout.lowerInfoPanelHeight)
 end
 

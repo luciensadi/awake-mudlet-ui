@@ -1,93 +1,69 @@
 awake = awake or {}
 awake.infoPanel = awake.infoPanel or {}
+awake.infoPanel.bolts = awake.infoPanel.bolts or {}
 awake.infoPanel.conditionStyles = awake.infoPanel.conditionStyles or {}
 
+function awake.infoPanel.setSizeOnResize()
+  if awake.layout.lowerInfoPanel == nil then
+    return
+  end
+  
+  local x = assert(awake.layout.lowerInfoPanel.get_x)()
+  local y = assert(awake.layout.lowerInfoPanel.get_y)()
+  local w = assert(awake.layout.lowerInfoPanel.get_width)()
+  local h = assert(awake.layout.lowerInfoPanel.get_height)()
+  
+  awake.infoPanel.bolts[2]:move((w - 18).."px", "0px")
+  awake.infoPanel.bolts[3]:move((w - 18).."px", (h - 18).."px")
+  awake.infoPanel.bolts[4]:move("0px", (h - 18).."px")
+end
 
 function awake.infoPanel.setup()
-  local basicStatsContainer = Geyser.Label:new({
-    h_stretch_factor = 0.9
-  }, awake.layout.lowerInfoPanel)
-  local combatContainer = Geyser.Label:new({
-    h_stretch_factor = 0.9
-  }, awake.layout.lowerInfoPanel)
-
-  awake.infoPanel.createBasicStats(basicStatsContainer)
-end
-
-function awake.infoPanel.createConditionMonitor(container, x, y, label, varName)
-  healthContainer = Geyser.Label:new({
-    name = varName .. "Container",
-    x = x, y = y, width = "90%", height = 20
-  }, container)
-  healthContainer:raiseAll()
+  awake.setup.registerEventHandler("sysWindowResizeEvent", function()
+    awake.infoPanel.setSizeOnResize()
+  end)
   
-  -- Add the label
-  conditionLabel = Geyser.Label:new({
-    name = varName .. "Label",
-    x = 0, y = 0, width = "60", height = "100%",
-  }, healthContainer)
-  conditionLabel:raiseAll()
-
-  conditionLabel:echo(label)
-  conditionLabel:setStyleSheet([[
-    color: white;
-    font-weight: bold;
-    padding: 0 4px;
+  awake.infoPanel.bolts[1] = Geyser.Label:new({
+    x = 0, y = 0,
+    width = 18, height = 18,
+  }, awake.layout.lowerInfoPanel)
+  awake.infoPanel.bolts[1]:setStyleSheet([[
+    background-color: rgba(0,0,0,0%);
   ]])
+  awake.infoPanel.bolts[1]:setBackgroundImage(getMudletHomeDir() .. "/awake-ui/bolt-tl.png")
+  awake.infoPanel.bolts[1]:raiseAll()
   
-  -- Calculate where the first box should start
-  local boxStartX = 66
-  local boxWidth = 20
-  awake.infoPanel[varName .. "Boxes"] = {}
-  local healthBoxes = awake.infoPanel[varName .. "Boxes"]
   
-  -- Create 10 health boxes with manual positioning
-  for i = 1, 10 do
-    local xOffset = boxStartX + (i - 1) * (boxWidth + 2)
-    healthBoxes[i] = Geyser.Label:new({
-      name = varName .. "Box" .. i,
-      x = xOffset, y = 0, width = boxWidth, height = boxWidth,
-    }, healthContainer)
-    
-    healthBoxes[i]:raiseAll()
-    healthBoxes[i]:setStyleSheet(awake.infoPanel.conditionStyles.empty)
-  end
+  awake.infoPanel.bolts[2] = Geyser.Label:new({
+    y = 0,
+    width = 18, height = 18,
+  }, awake.layout.lowerInfoPanel)
+  awake.infoPanel.bolts[2]:setStyleSheet([[
+    background-color: rgba(0,0,0,0%);
+  ]])
+  awake.infoPanel.bolts[2]:setBackgroundImage(getMudletHomeDir() .. "/awake-ui/bolt-tr.png")
+  awake.infoPanel.bolts[2]:raiseAll()
   
-  local function doUpdate()
-    if not gmcp or not gmcp.Char or not gmcp.Char.Vitals then
-      return  
-    end
-    local current = (gmcpVarByPath("Char.Vitals." .. varName) or 0) / 100
-    local max = (gmcpVarByPath("Char.Vitals." .. varName .. "_max") or 0) / 100
-    local filled = math.floor((current / max) * 10 + 0.5)
-    local boxes = awake.infoPanel[varName .. "Boxes"]
-    for i = 1, 10 do
-      local style = (i <= filled) and awake.infoPanel.conditionStyles.filled or awake.infoPanel.conditionStyles.empty
-      boxes[i]:setStyleSheet(style)
-    end
-  end
-  awake.setup.registerEventHandler("gmcp.Char.Vitals", doUpdate)
-end
-
-function awake.infoPanel.createBasicStats(container)
-  -- Shared styles
-  local filledStyle = [[
-    background-color: red;
-    border: 1px solid white;
-    margin: 1px;
-  ]]
-  local emptyStyle = [[
-    background-color: black;
-    border: 1px solid white;
-    margin: 1px;
-  ]]
+  awake.infoPanel.bolts[3] = Geyser.Label:new({
+    width = 18, height = 18,
+  }, awake.layout.lowerInfoPanel)
+  awake.infoPanel.bolts[3]:setStyleSheet([[
+    background-color: rgba(0,0,0,0%);
+  ]])
+  awake.infoPanel.bolts[3]:setBackgroundImage(getMudletHomeDir() .. "/awake-ui/bolt-br.png")
+  awake.infoPanel.bolts[3]:raiseAll()
   
-  -- Store styles for reuse in update function
-  awake.infoPanel.conditionStyles = {
-    filled = filledStyle,
-    empty = emptyStyle
-  }
+  awake.infoPanel.bolts[4] = Geyser.Label:new({
+    width = 18, height = 18,
+  }, awake.layout.lowerInfoPanel)
+  awake.infoPanel.bolts[4]:setStyleSheet([[
+    background-color: rgba(0,0,0,0%);
+  ]])
+  awake.infoPanel.bolts[4]:setBackgroundImage(getMudletHomeDir() .. "/awake-ui/bolt-bl.png")
+  awake.infoPanel.bolts[4]:raiseAll()
   
-  awake.infoPanel.createConditionMonitor(container, "5%", 3, "Mental", "mental")
-  awake.infoPanel.createConditionMonitor(container, "5%", 28, "Physical", "physical")
+  awake.infoPanel.setSizeOnResize()
+  
+  awake.infoPanel.credstik.setup()
+  awake.infoPanel.condition.setup()
 end

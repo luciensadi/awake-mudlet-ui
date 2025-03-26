@@ -66,7 +66,4 @@ awake.setup.registerEventHandler("sysUninstallPackage", function(_, pkgName)
 end)
 
 awake.setup.registerEventHandler("sysProtocolEnabled", function(_, protocol)
-  if protocol == "GMCP" then
-    sendGMCP("Core.Supports.Set", "[\"Ship 1\"]")
-  end
 end)

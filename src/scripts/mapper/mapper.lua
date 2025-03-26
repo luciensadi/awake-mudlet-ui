@@ -64,6 +64,8 @@ function awake.mapper.mapCommand(input)
     awake.mapper.stopMapping()
   elseif cmd == "deletearea" then
     awake.mapper.deleteArea(args)
+  elseif cmd == "deleteroom" then
+    awake.mapper.deleteRoom(args)
   elseif cmd == "shift" then
     awake.mapper.shiftCurrentRoom(args)
   elseif cmd == "save" then
@@ -74,6 +76,30 @@ function awake.mapper.mapCommand(input)
     awake.mapper.resetMap()
   else
     awake.mapper.logError("Unknown map command. Try <yellow>map help<reset>.")
+  end
+end
+
+function awake.mapper.shiftCurrentRoom(direction)
+  direction = trim(direction)
+  if #direction == 0 then
+    awake.mapper.log("Syntax: map shift <yellow><direction><reset>")
+    return
+  end
+
+  local dir = dirObj(direction)
+  if dir == nil then
+    awake.mapper.logError("Direction unknown: <yellow>"..direction.."<reset>")
+    return
+  end
+
+  local vnum = awake.mapper.current.vnum
+  local room = awake.mapper.getRoomByVnum(vnum)
+  if room ~= nil then
+    currentX, currentY, currentZ = getRoomCoordinates(vnum)
+    dx, dy, dz = unpack(dir.xyzDiff)
+    setRoomCoordinates(vnum, currentX+dx, currentY+dy, currentZ+dz)
+    updateMap()
+    centerview(vnum)
   end
 end
 
@@ -99,7 +125,7 @@ or coloring rooms, etc.
 ]])
 
   if awake.mapper.mapping then
-    cecho("Mapper status: <green>Mapping<reset> in zone <yellow>"..awake.mapper.mapping.."<reset>\n")
+    cecho("Mapper status: <green>Mapping<reset> in <yellow>"..awake.mapper.mappingArea.."<reset>\n")
   else
     cecho("Mapper status: <red>Off<reset>\n")
   end
@@ -145,24 +171,36 @@ end
 
 
 function awake.mapper.startMapping(areaName)
-  if awake.mapper.mapping then
-    awake.mapper.log("The mapping system is already active.")
+  areaName = trim(areaName)
+  if #areaName == 0 then
+    awake.mapper.log("Syntax: map start <yellow><area name><reset>")
+    return
+  elseif awake.mapper.mappingArea ~= nil then
+    awake.mapper.logError("Mapper already running in <yellow>"..awake.mapper.mappingArea.."<reset>.")
     return
   end
   
-  awake.mapper.mapping = true
+  local areaTable = getAreaTable()
+  if areaTable[areaName] == nil then
+    addAreaName(areaName)
+    awake.mapper.log("Mapping in new area <yellow>"..areaName.."<reset>.")
+  else
+    awake.mapper.log("Mapping in existing area <yellow>"..areaName.."<reset>.")
+  end
+  
+  awake.mapper.mappingArea = areaName
   awake.mapper.lastMoveDirs = {}
-  awake.mapper.processCurrentZone()
   awake.mapper.processCurrentRoom()
 end
 
 
 function awake.mapper.stopMapping()
-  if not awake.mapper.mapping then
+  if awake.mapper.mappingArea == nil then
     awake.mapper.logError("Mapper not running.")
     return
   end
-  awake.mapper.mapping = false
+  
+  awake.mapper.mappingArea = nil
   awake.mapper.lastMoveDirs = nil
   awake.mapper.log("Mapping <red>stopped<reset>. Don't forget to <yellow>map save<reset>!")
 end
@@ -173,6 +211,16 @@ function awake.mapper.resetMap()
     awake.mapper.log("Area <yellow>"..name.."<reset> deleted.")
   end
   awake.mapper.log("Map has been reset.")
+end
+
+function awake.mapper.deleteRoom()
+  if awake.mapper.mappingArea == nil then
+    awake.mapper.logError("Mapper not running.")
+    return
+  end
+  
+  deleteRoom(awake.mapper.current.vnum)
+  awake.mapper.log("Room <yellow>"..awake.mapper.current.name.."<reset> deleted.")
 end
 
 function awake.mapper.deleteArea(areaName)
@@ -238,15 +286,15 @@ function awake.mapper.setup()
   end
   setMapZoom(15)
 
-  -- local hasAnyAreas = false
-  -- for name, id in pairs(getAreaTable()) do
-    -- if name ~= "Default Area" then
-      -- hasAnyAreas = true
-    -- end
-  -- end
-  -- if not hasAnyAreas then
-    -- loadMap(getMudletHomeDir().."/awake-ui/starter-map.dat")
-  -- end
+  local hasAnyAreas = false
+  for name, id in pairs(getAreaTable()) do
+    if name ~= "Default Area" then
+      hasAnyAreas = true
+    end
+  end
+  if not hasAnyAreas then
+    loadMap(getMudletHomeDir().."/awake-ui/starter-map.dat")
+  end
 
   awake.setup.registerEventHandler("sysDataSendRequest", awake.mapper.handleSentCommand)
   awake.setup.registerEventHandler("gmcp.Room.Info", awake.mapper.onEnterRoom)
@@ -261,7 +309,7 @@ end
 -- Track the most recent movement command so we know which direction we moved when automapping
 function awake.mapper.handleSentCommand(event, cmd)
   -- If we're not mapping, don't bother
-  if not awake.mapper.mapping then
+  if awake.mapper.mappingArea == nil then
     return
   end
 
@@ -298,22 +346,6 @@ function awake.mapper.findExitByDirection(room, direction)
   return nil
 end
 
-function awake.mapper.processCurrentZone()
-  if not awake.mapper.mapping then
-    return
-  end
-  
-  areaName = trim(awake.mapper.current.zone.name)
-
-  local areaTable = getAreaTable()
-  if areaTable[areaName] == nil then
-    addAreaName(areaName)
-    awake.mapper.logDebug("Mapping in new area <yellow>"..areaName.."<reset>.")
-  else
-    awake.mapper.logDebug("Mapping in existing area <yellow>"..areaName.."<reset>.")
-  end
-end
-
 -- Function used to handle a room that we've moved into. This will use the data on
 -- awake.mapper.current, compared with awake.mapper.last, to potentially create a new room and
 -- link it with an exit on the previous room.
@@ -322,7 +354,7 @@ function awake.mapper.processCurrentRoom()
   local moveDir = awake.mapper.popMoveDir() -- This is the direction we typed to get here
   local room = awake.mapper.getRoomByVnum(vnum)
 
-  if not awake.mapper.mapping and room == nil then
+  if awake.mapper.mappingArea == nil and room == nil then
     awake.mapper.logDebug("Room not found, but mapper not running.")
     return
   end
@@ -338,7 +370,7 @@ function awake.mapper.processCurrentRoom()
     awake.mapper.logDebug("Added new room: <yellow>"..awake.mapper.current.name.."<reset>")
     addRoom(vnum)
     local areaTable = getAreaTable()
-    setRoomArea(vnum, areaTable[trim(awake.mapper.current.zone.name)])
+    setRoomArea(vnum, areaTable[trim(awake.mapper.mappingArea)])
     setRoomCoordinates(vnum, 0, 0, 0)
     setRoomName(vnum, awake.mapper.current.name)
     room = awake.mapper.getRoomByVnum(vnum)
@@ -379,6 +411,7 @@ function awake.mapper.processCurrentRoom()
       setRoomCoordinates(vnum, lastX+dx, lastY+dy, lastZ+dz)
     end
   else
+    awake.mapper.lastMoveDirs = {}
     awake.mapper.logDebug("Found existing room: <yellow>"..getRoomName(vnum).."<reset>")
   end
   
@@ -405,11 +438,9 @@ function awake.mapper.onEnterRoom()
   awake.mapper.current = {
     vnum = gmcp.Room.Info.vnum,
     name = gmcp.Room.Info.name,
-    exits = gmcp.Room.Info.exits or {},
-    zone = gmcp.Room.Info.zone
+    exits = gmcp.Room.Info.exits or {}
   }
   
-  awake.mapper.processCurrentZone()
   awake.mapper.processCurrentRoom()
 end
 

@@ -66,4 +66,5 @@ function awake.infoPanel.setup()
   
   awake.infoPanel.credstik.setup()
   awake.infoPanel.condition.setup()
+  awake.infoPanel.karma.setup()
 end

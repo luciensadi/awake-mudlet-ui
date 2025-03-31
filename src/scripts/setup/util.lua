@@ -141,3 +141,13 @@ function splitargs(args)
 function trim(s)
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
+
+
+function addCommas(n)
+  local formatted = tostring(n)
+  local k
+  repeat
+      formatted, k = formatted:gsub("^(-?%d+)(%d%d%d)", "%1,%2")
+  until k == 0
+  return formatted
+end

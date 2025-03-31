@@ -10,6 +10,11 @@ function awake.infoPanel.condition.setup()
     border: 1px solid white;
     margin: 1px;
   ]]
+  local altFilledStyle = [[
+    background-color: blue;
+    border: 1px solid white;
+    margin: 1px;
+  ]]
   local emptyStyle = [[
     background-color: black;
     border: 1px solid white;
@@ -19,11 +24,12 @@ function awake.infoPanel.condition.setup()
   -- Store styles for reuse in update function
   awake.infoPanel.condition.styles = {
     filled = filledStyle,
+    altFilled = altFilledStyle,
     empty = emptyStyle
   }
   
-  awake.infoPanel.condition.createMonitor(awake.layout.lowerInfoPanel, "230px", 6, "Mental", "mental")
-  awake.infoPanel.condition.createMonitor(awake.layout.lowerInfoPanel, "230px", 31, "Physical", "physical")
+  awake.infoPanel.condition.createMonitor(awake.layout.lowerInfoPanel, "230px", 6, "MENTAL", "mental")
+  awake.infoPanel.condition.createMonitor(awake.layout.lowerInfoPanel, "230px", 40, "PHYSICAL", "physical")
 end
 
 function awake.infoPanel.condition.createMonitor(container, x, y, label, varName)
@@ -38,18 +44,18 @@ function awake.infoPanel.condition.createMonitor(container, x, y, label, varName
   healthContainer:raiseAll()
   
   -- Add the label
-  conditionLabel = Geyser.Label:new({
+  local conditionLabel = Geyser.Label:new({
     name = varName .. "Label",
     x = 0, y = 0, width = "60", height = "100%",
   }, healthContainer)
-  conditionLabel:raiseAll()
-
-  conditionLabel:echo(label)
+  -- Makes it transparent
   conditionLabel:setStyleSheet([[
-    color: white;
-    font-weight: bold;
-    padding: 0 4px;
+    background-color: rgba(0,0,0,0%); 
   ]])
+  conditionLabel:setFontSize(10)
+  conditionLabel:setAlignment("left")
+  conditionLabel:raiseAll()
+  conditionLabel:echo(label)
   
   -- Calculate where the first box should start
   local boxStartX = 66
@@ -81,7 +87,12 @@ function awake.infoPanel.condition.createMonitor(container, x, y, label, varName
     local filled = math.floor((current / max) * 10 + 0.5)
     local boxes = awake.infoPanel[varName .. "Boxes"]
     for i = 1, 10 do
-      local style = (i <= filled) and awake.infoPanel.condition.styles.filled or awake.infoPanel.condition.styles.empty
+      local style = awake.infoPanel.condition.styles.empty
+      if i <= filled and varName == "mental" then
+        style = awake.infoPanel.condition.styles.altFilled
+      elseif i <= filled then
+        style = awake.infoPanel.condition.styles.filled
+      end
       boxes[i]:setStyleSheet(style)
     end
   end

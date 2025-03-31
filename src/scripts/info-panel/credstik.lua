@@ -8,6 +8,7 @@ awake.infoPanel.credstik = awake.infoPanel.credstik or {}
   -- end
 -- end
 
+
 function awake.infoPanel.credstik.setup()
   local credstik = Geyser.Label:new({
     name = "credstick",
@@ -42,7 +43,7 @@ function awake.infoPanel.credstik.setup()
     if not gmcp or not gmcp.Char or not gmcp.Char.Vitals then
       return  
     end
-    credstikAmount:echo(gmcpVarByPath("Char.Vitals.nuyen"))
+    credstikAmount:echo(addCommas(gmcpVarByPath("Char.Vitals.nuyen")))
   end
   awake.setup.registerEventHandler("gmcp.Char.Vitals", doUpdate)
 end

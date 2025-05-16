@@ -1,0 +1,20 @@
+[
+  {
+    "name": "connect-host",
+    "patterns": [
+      {
+        "pattern": "^You haven't located any hosts with the address '(.+)'.$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^You gracefully log off from the matrix and return to the real world.$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^You are dumped from the matrix!$",
+        "type": "regex"
+      }
+    ],
+    "script": "awake.matrix.lastConnectAddress = \"\"\ndisableTrigger(\"connect-host\")"
+  }
+]

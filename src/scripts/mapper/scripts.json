@@ -1,0 +1,14 @@
+[
+    {
+      "name": "mapper"
+    },
+    {
+      "name": "logging"
+    },
+    {
+      "name": "commands"
+    },
+    {
+      "name": "util"
+    }
+  ]

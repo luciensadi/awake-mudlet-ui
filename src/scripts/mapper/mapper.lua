@@ -209,7 +209,10 @@ end
 
 function doSpeedWalk()
   awake.mapper.log("Speedwalking using these directions: " .. table.concat(speedWalkDir, ", ") .. "\n")
-  for _, dir in ipairs(speedWalkDir) do
-    send(dir, false)
+  table.insert(speedWalkPath, 1, awake.mapper.current.vnum) -- Move after login to populate gmcp.Room
+  for i, dir in ipairs(speedWalkDir) do -- vnum-dir-vnum double array model
+    local door = getDoors(speedWalkPath[i],dir)
+    if door[dir] ~= nil then send("open "..dirObj(dir).long) end
+    send(dir)
   end
 end

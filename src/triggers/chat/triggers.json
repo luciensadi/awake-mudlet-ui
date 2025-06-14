@@ -35,7 +35,7 @@
         "type": "regex"
       },
       {
-        "pattern": "^(?!\s)[\w]* \|\]Question\[\|",
+        "pattern": "^(?!\\s)[\\w]* \\|\\]Question\\[\\|",
         "type": "regex"
       }
     ],
@@ -53,7 +53,7 @@
         "type": "regex"
       },
       {
-        "pattern": "^You hear (.+)(?: \((.+)\))? in your mind say, \"(.+)\"$",
+        "pattern": "^You hear (.+)(?: \\((.+)\\))? in your mind say, \"(.+)\"$",
         "type": "regex"
       },
       {

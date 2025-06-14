@@ -33,6 +33,10 @@
       {
         "pattern": "^\\[(.+)\\] \\(OOC\\), \"(.+)\"$",
         "type": "regex"
+      },
+      {
+        "pattern": "^(?!\s)[\w]* \|\]Question\[\|",
+        "type": "regex"
       }
     ],
     "script": "awake.chat.routeMessage(\"ooc\")"   
@@ -46,6 +50,14 @@
       },
       {
         "pattern": "^You tell (.+)(?: \\((.+)\\))? OOCly, '(.+)'$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^You hear (.+)(?: \((.+)\))? in your mind say, \"(.+)\"$",
+        "type": "regex"
+      },
+      {
+        "pattern": "^You think across your mindlink, \"(.+)\"$",
         "type": "regex"
       }
     ],

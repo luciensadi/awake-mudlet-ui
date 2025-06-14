@@ -18,6 +18,11 @@ on:
 jobs:
   # This collection is called 'build'
   build:
+    # permissions required for build attestations
+    permissions:
+      id-token: write
+      attestations: write
+      
     # build on GitHub's latest ubuntu image
     runs-on: ubuntu-latest
 
@@ -30,7 +35,17 @@ jobs:
       # it will show up as "Muddle" in the GitHub web interface later
       - name: Muddle
         uses: demonnic/build-with-muddler@v1.2
-      
+
+      # Since Github only allows uploading .zip artifacts, rename the
+      # .mpackage to .zip (it's a ZIP file anyways)
+      - name: Rename generated file 
+        run: mv build/awake-ui.mpackage build/awake-ui.zip
+
+      # Add an attestation about the artifact
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'build/awake-ui.zip'
+
       # This step uploads the artifact for you and others to download
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -40,4 +55,4 @@ jobs:
           # zip it up and upload it. That's all the .mpackage is anyway
           # just with a different file extension
           name: awake-ui
-          path: build/tmp/
+          path: build/awake-ui.zip
